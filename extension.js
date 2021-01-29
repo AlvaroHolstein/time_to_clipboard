@@ -67,7 +67,7 @@ function correctClip(msg) {
 			console.log(msg)
 		});
 	} else if (os.platform().includes('win')) {
-		// Funcionar Top
+		// Funciona Top
 		childProcess.spawn('clip').stdin.end(msg);
 	}
 }
