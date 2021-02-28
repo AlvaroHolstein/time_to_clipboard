@@ -4,6 +4,10 @@ const vscode = require('vscode');
 const childProcess = require('child_process');
 const os = require("os");
 const { MessageChannel } = require('worker_threads');
+const fs = require("fs");
+const fsPromises = fs.promises; // é daqui que é criado um filehandler depos de abrir um documento de texto
+
+const path = require("path");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -58,17 +62,37 @@ exports.activate = activate;
 function deactivate() { }
 
 // Função para usar o clipboard consoante o sistema operativo
-function correctClip(msg) {
-	if (os.platform() == 'linux') {
-		// Não está a funcionar para linux porque falta um display (Ver erro outra vez porque não ter que ser um display fisico acho)
-		childProcess.exec(`echo '${msg}' | /usr/bin/xclip -in`, (err, stdout, stderr) => {
-			if(err || stderr) console.error("Merda", err || stderr)
-
-			console.log(msg)
-		});
-	} else if (os.platform().includes('win')) {
-		// Funciona Top
-		childProcess.spawn('clip').stdin.end(msg);
+async function correctClip(msg) {
+	try {
+		if (os.platform() == 'linux') {
+			// Não está a funcionar para linux porque falta um display (Ver erro outra vez porque não ter que ser um display fisico acho)
+			// childProcess.exec(`echo '${msg}' | /usr/bin/xclip -in`, (err, stdout, stderr) => {
+			// 	if(err || stderr) console.error("Merda", err || stderr)
+	
+			// 	console.log(msg)
+			// }); 
+	
+			// NOTA: Já que não dá para "mandar" para o clipboard vou escrever para o ficheiro atual 
+			// Para ter acesso ao ficheiro atual basta o __filename.
+			// Posição do cursor num ficheiro (https://stackoverflow.com/questions/65261663/vscode-how-to-get-position-of-cursor-in-the-document#answer-65261877)
+	
+			let editor = vscode.window.activeTextEditor;
+			console.log("Current file",editor.document.fileName) // Current active file i Think
+			let currFile = editor.document.filename
+			console.log(editor.selection.active)
+	
+			let bufferedMsg = new Buffer.from(msg, "utf-8"); // só new Buffer tá deceprecated, acho que afinal dá para usar só uma string (msg)
+	
+			// Vou ter que usar fileHnadler
+			const filehandler = await fsPromises.open(currFile, ) //'r+': Open file for reading and writing. An exception occurs if the file does not exist.
+			
+			filehandler.write(msg, )
+		} else if (os.platform().includes('win')) {
+			// Funciona Top
+			childProcess.spawn('clip').stdin.end(msg);
+		}
+	} catch (err) {
+		console.error("Custom error Handler", err)
 	}
 }
 module.exports = {
